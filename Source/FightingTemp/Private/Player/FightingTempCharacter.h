@@ -39,46 +39,8 @@ class AFightingTempCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
-	/*****************************************************/
-	/*                       Input                       */
-	/*****************************************************/
-	
-	/** MappingContext */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* JumpAction;
-
-	/** Jump Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* JumpActionP2;
-	
-	/** Move Input Action */
-//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* MoveAction;
-
-	/** Move Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* MoveActionP2;
-	
-	/** Look Input Action */
-	//(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* LookAction;
-	
-//ATTACKS
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* Attack1Action;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* RangedAttackAction;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* GrabAction;
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* FinisherAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//UInputAction* Attack1ActionP2;
+	//------NOTE THIS CHARACTER AND BLUEPRINT IS LOCAL MULTIPLAYER ONLY! ENTIRELY SERVER SIDE-----//
 	
 public:
 	AFightingTempCharacter();
@@ -88,8 +50,11 @@ public:
 
 protected:
 
+	/*****************************************************/
+	/*                    Actions                        */
+	/*****************************************************/
+	
 	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
 	void MoveRight(float Value);
 
 	/** Called for looking input */
@@ -112,9 +77,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void P2KeyboardMoveRight(float value);
 
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Attacks")
-	bool FirstAttackUsed;
+	// ------------------------------- //
 
 	void TakeDamage(float dmgAmt);
 
@@ -123,6 +86,19 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Controller")
 	bool isDeviceForMultiplePlayers;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Attacks")
+	bool FirstAttackUsed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
+	AFightingTempCharacter* otherPlayer;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+	bool isFlipped;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+	FTransform transform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+	FVector scale;
 
 protected:
 
@@ -131,6 +107,8 @@ protected:
 	
 	// To add mapping context
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 public:
 	/** Returns CameraBoom subobject **/

@@ -24,6 +24,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // AFightingTempCharacter
 
+//------NOTE THIS CHARACTER AND BLUEPRINT IS LOCAL MULTIPLAYER ONLY! ENTIRELY SERVER SIDE-----//
+
 AFightingTempCharacter::AFightingTempCharacter()
 {
 	// Set size for collision capsule
@@ -46,6 +48,7 @@ AFightingTempCharacter::AFightingTempCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -62,43 +65,77 @@ AFightingTempCharacter::AFightingTempCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	FirstAttackUsed = false;
-
+	transform = FTransform(FQuat(), FVector(), FVector());
+	scale = FVector(0.0f, 0.0f, 0.0f);
 	PlayerHealth = 1.0f;
+	isFlipped = false;
 }
 
 void AFightingTempCharacter::PawnClientRestart()
 {
 	Super::PawnClientRestart();
-/*
-	APlayerController* PlayerController = GetController<APlayerController>();
-	if (PlayerController)
-	{
-		UEnhancedInputLocalPlayerSubsystem* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-		InputSubsystem->ClearAllMappings();
-		InputSubsystem->AddMappingContext(DefaultMappingContext, 0);
-	}
-	*/
 }
 
 void AFightingTempCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-/*
-	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	
+}
+
+void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever possible is below, fix later PLEASE WTF
+{
+	Super::Tick(DeltaSeconds);
+//HELP
+	if(otherPlayer) //if exists....
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if(auto characterMovement = GetCharacterMovement()) //then get our char movement
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			//WHY
+			if(auto enemyMovement = otherPlayer->GetCharacterMovement()) //get other player's movement
+			{
+				//IT JUST KEEPS GOING
+				if(enemyMovement->GetActorLocation().X <= characterMovement->GetActorLocation().X) //left and right <--> = X in unreal. on map check if enemy to left of u
+				{
+					if(isFlipped) //unflip
+					{
+						//sobbing 
+						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+						{
+							transform = mesh->GetRelativeTransform();
+							scale = transform.GetScale3D();
+							scale.Y = -1;
+							transform.SetScale3D(scale);
+							mesh->SetRelativeTransform(transform);
+						}
+						isFlipped = false;
+					}
+				}
+				else
+				{
+					if(!isFlipped) //flip
+					{
+						//sobbing 
+						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+						{
+							transform = mesh->GetRelativeTransform();
+							scale = transform.GetScale3D();
+							scale.Y = 1;
+							transform.SetScale3D(scale);
+							mesh->SetRelativeTransform(transform);
+						}
+						isFlipped = true;
+					}
+					
+				}
+				
+			}
 		}
-		
 	}
-	*/
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Input
+// Actions
 
 void AFightingTempCharacter::TakeDamage(float dmgAmt)
 {
@@ -107,6 +144,7 @@ void AFightingTempCharacter::TakeDamage(float dmgAmt)
 	{
 		PlayerHealth = 0.0f;
 	}
+	//TEMP!!!!
 }
 
 void AFightingTempCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -114,35 +152,13 @@ void AFightingTempCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	// Set up action bindings
 	if(auto gameMode = Cast<AFightingTempGameMode>(GetWorld()->GetAuthGameMode()))
 	{
+		// We are using the old input system due to issues with axis mapping equivalent not found in enhanced input system. --> needed for blueprint 
 		if(gameMode->player1 == this)
 		{
 			PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 			PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 			PlayerInputComponent->BindAxis("MoveRight", this, &AFightingTempCharacter::MoveRight);
 			PlayerInputComponent->BindAction("Attack1", IE_Pressed, this, &AFightingTempCharacter::StartAttack1);
-			/*if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-				// Jumping
-				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-				EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-				// Moving
-				EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::Move);
-
-				//Attacking
-				EnhancedInputComponent->BindAction(Attack1Action, ETriggerEvent::Started, this, &AFightingTempCharacter::StartAttack1);
-				EnhancedInputComponent->BindAction(RangedAttackAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::StartRangedAttack1);
-				EnhancedInputComponent->BindAction(GrabAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::StartGrab1);
-				EnhancedInputComponent->BindAction(FinisherAction, ETriggerEvent::Started, this, &AFightingTempCharacter::StartFinisher1);
-
-				// Looking
-				//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::Look);
-			}
-			
-			else
-			{
-				UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-			}*/
 		}
 		else
 		{
@@ -150,58 +166,11 @@ void AFightingTempCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 			PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &ACharacter::StopJumping);
 			PlayerInputComponent->BindAxis("MoveRightP2", this, &AFightingTempCharacter::MoveRight);
 			PlayerInputComponent->BindAction("Attack1P2", IE_Pressed, this, &AFightingTempCharacter::StartAttack1);
-			/*
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-				// Jumping
-				EnhancedInputComponent->BindAction(JumpActionP2, ETriggerEvent::Started, this, &ACharacter::Jump);
-				EnhancedInputComponent->BindAction(JumpActionP2, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-				// Moving
-				PlayerInputComponent->BindAxis("MoveRightP2", this, &AFightingTempCharacter::MoveRight);
-
-				//Attacking
-				EnhancedInputComponent->BindAction(Attack1ActionP2, ETriggerEvent::Started, this, &AFightingTempCharacter::StartAttack1);
-				//EnhancedInputComponent->BindAction(RangedAttackAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::StartRangedAttack1);
-				//EnhancedInputComponent->BindAction(GrabAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::StartGrab1);
-				//EnhancedInputComponent->BindAction(FinisherAction, ETriggerEvent::Started, this, &AFightingTempCharacter::StartFinisher1);
-
-				// Looking
-				//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AFightingTempCharacter::Look);
-			}
-			else
-			{
-				UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-			}
-			*/
 		}
 	}
 }
 
-void AFightingTempCharacter::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		//const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		//AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(FVector(1,0,0), MovementVector.X);
-	}
-}
-
-void AFightingTempCharacter::MoveRight(float Value)
+void AFightingTempCharacter::MoveRight(float Value) //altered in blueprint btw for left most and right most player specific movement
 {
  AddMovementInput(FVector(-1.f, 0.f, 0.f), Value);
 }
@@ -223,21 +192,27 @@ void AFightingTempCharacter::StartAttack1()
 {
 	UE_LOG(LogTemp, Warning, TEXT("First attack used!"));
 	FirstAttackUsed = true;
+	//TEMP
 }
 
 void AFightingTempCharacter::StartRangedAttack1()
 {
+	//TEMP
 }
 
 void AFightingTempCharacter::StartGrab1()
 {
+	//TEMP
 }
 
 void AFightingTempCharacter::StartFinisher1()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Finisher attack used!"));
+	//TEMP
 
 }
+
+//---------------KEYBOARD SPECIFIC PLAYER 2 ACTIONS BELOW----------- //
 
 void AFightingTempCharacter::P2KeyboardAttack1()
 {
