@@ -202,6 +202,10 @@ void AFightingTempCharacter::MoveRight(float Value) //altered in blueprint btw f
 				{
 					AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
 				}
+				else
+				{
+					AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+				}
 			}
 			else
 			{
@@ -235,6 +239,10 @@ void AFightingTempCharacter::MoveRightController(float Value)
 				if(currentDistanceApart >= 5.0f)
 				{
 					if(((currentDistanceApart + Value < currentDistanceApart) && !isFlipped) || ((currentDistanceApart - Value < currentDistanceApart) && isFlipped))
+					{
+						AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+					}
+					else
 					{
 						AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
 					}
