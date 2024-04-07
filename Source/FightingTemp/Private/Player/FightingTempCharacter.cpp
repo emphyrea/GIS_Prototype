@@ -17,6 +17,7 @@
 #include "GameFramework/Controller.h"
 
 #include "InputActionValue.h"
+#include "MyBaseGameInstance.h"
 #include "FightingTemp/FightingTempGameMode.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -65,6 +66,7 @@ AFightingTempCharacter::AFightingTempCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	FirstAttackUsed = false;
+	directionalInput = EDirectionalInput::VE_Default;
 	transform = FTransform(FQuat(), FVector(), FVector());
 	scale = FVector(0.0f, 0.0f, 0.0f);
 	PlayerHealth = 1.0f;
@@ -155,24 +157,94 @@ void AFightingTempCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		// We are using the old input system due to issues with axis mapping equivalent not found in enhanced input system. --> needed for blueprint 
 		if(gameMode->player1 == this)
 		{
-			PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-			PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 			PlayerInputComponent->BindAxis("MoveRight", this, &AFightingTempCharacter::MoveRight);
-			PlayerInputComponent->BindAction("Attack1", IE_Pressed, this, &AFightingTempCharacter::StartAttack1);
 		}
 		else
 		{
-			PlayerInputComponent->BindAction("JumpP2", IE_Pressed, this, &ACharacter::Jump);
-			PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &ACharacter::StopJumping);
 			PlayerInputComponent->BindAxis("MoveRightP2", this, &AFightingTempCharacter::MoveRight);
-			PlayerInputComponent->BindAction("Attack1P2", IE_Pressed, this, &AFightingTempCharacter::StartAttack1);
 		}
+		PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+		PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+		PlayerInputComponent->BindAction("AttackLight", IE_Pressed, this, &AFightingTempCharacter::StartAttackLight);
+		PlayerInputComponent->BindAxis("MoveRightController", this, &AFightingTempCharacter::MoveRightController);
+
+		PlayerInputComponent->BindAction("JumpP2", IE_Pressed, this, &ACharacter::Jump);
+		PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &ACharacter::StopJumping);
+		PlayerInputComponent->BindAction("AttackLightP2", IE_Pressed, this, &AFightingTempCharacter::StartAttackLight);
 	}
 }
 
 void AFightingTempCharacter::MoveRight(float Value) //altered in blueprint btw for left most and right most player specific movement
 {
- AddMovementInput(FVector(-1.f, 0.f, 0.f), Value);
+	if(auto baseGameInstance = Cast<UMyBaseGameInstance>(GetGameInstance())) 
+	{
+		if(baseGameInstance->isDeviceForMultiplePlayers)
+		{
+			//if(canMove and not block) ,do the things i have not yet added lol
+			//if not jumpingstate or launched --not added yet
+			if(Value > 0.01f)
+			{
+				directionalInput = EDirectionalInput::VE_MovingRight;
+			}
+			else if (Value < -0.01f)
+			{
+				directionalInput = EDirectionalInput::VE_MovingLeft;
+			}
+			else
+			{
+				directionalInput = EDirectionalInput::VE_Default;
+			}
+
+			float currentDistanceApart = abs(otherPlayer->GetActorLocation().X - GetActorLocation().X);
+			if(currentDistanceApart >= 5.0f)
+			{
+				if(((currentDistanceApart + Value < currentDistanceApart) && !isFlipped) || ((currentDistanceApart - Value < currentDistanceApart) && isFlipped))
+				{
+					AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+				}
+			}
+			else
+			{
+				AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+			}
+		}
+	}
+}
+
+void AFightingTempCharacter::MoveRightController(float Value)
+{
+	if(auto baseGameInstance = Cast<UMyBaseGameInstance>(GetGameInstance())) //why does he keep doing this
+		{
+			if(!baseGameInstance->isDeviceForMultiplePlayers)
+			{
+				//if(canMove and not block) ,do the things i have not yet added lol
+				//if not jumpingstate or launched --not added yet
+				if(Value > 0.20f)
+				{
+					directionalInput = EDirectionalInput::VE_MovingRight;
+				}
+				else if (Value < -0.20f)
+				{
+					directionalInput = EDirectionalInput::VE_MovingLeft;
+				}
+				else
+				{
+					directionalInput = EDirectionalInput::VE_Default;
+				}
+				float currentDistanceApart = abs(otherPlayer->GetActorLocation().X - GetActorLocation().X);
+				if(currentDistanceApart >= 5.0f)
+				{
+					if(((currentDistanceApart + Value < currentDistanceApart) && !isFlipped) || ((currentDistanceApart - Value < currentDistanceApart) && isFlipped))
+					{
+						AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+					}
+				}
+				else
+				{
+					AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+				}
+			}
+		}
 }
 
 void AFightingTempCharacter::Look(const FInputActionValue& Value)
@@ -188,19 +260,19 @@ void AFightingTempCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AFightingTempCharacter::StartAttack1()
+void AFightingTempCharacter::StartAttackLight()
 {
 	UE_LOG(LogTemp, Warning, TEXT("First attack used!"));
 	FirstAttackUsed = true;
 	//TEMP
 }
 
-void AFightingTempCharacter::StartRangedAttack1()
+void AFightingTempCharacter::StartAttackMedium()
 {
 	//TEMP
 }
 
-void AFightingTempCharacter::StartGrab1()
+void AFightingTempCharacter::StartAttackHeavy()
 {
 	//TEMP
 }
@@ -212,11 +284,25 @@ void AFightingTempCharacter::StartFinisher1()
 
 }
 
+
+void AFightingTempCharacter::StartAttackSpecial()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Finisher attack used!"));
+	//TEMP
+
+}
+
+
+void AFightingTempCharacter::StartBlock()
+{
+	//TEMP
+}
+
 //---------------KEYBOARD SPECIFIC PLAYER 2 ACTIONS BELOW----------- //
 
 void AFightingTempCharacter::P2KeyboardAttack1()
 {
-	StartAttack1();
+	StartAttackLight();
 }
 
 void AFightingTempCharacter::P2KeyboardJump()

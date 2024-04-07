@@ -56,14 +56,17 @@ protected:
 	
 	/** Called for movement input */
 	void MoveRight(float Value);
+	void MoveRightController(float Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	
-	void StartAttack1();
-	void StartRangedAttack1();
-	void StartGrab1();
+	void StartAttackLight();
+	void StartAttackHeavy();
+	void StartAttackMedium();
+	void StartAttackSpecial();
 	void StartFinisher1();
+	void StartBlock();
 
 	UFUNCTION(BlueprintCallable)
 	void P2KeyboardAttack1();
@@ -99,6 +102,9 @@ protected:
 	FTransform transform;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 	FVector scale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	EDirectionalInput directionalInput;
 
 protected:
 
