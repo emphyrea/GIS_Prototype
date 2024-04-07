@@ -214,7 +214,7 @@ void AFightingTempCharacter::MoveRight(float Value) //altered in blueprint btw f
 
 void AFightingTempCharacter::MoveRightController(float Value)
 {
-	if(auto baseGameInstance = Cast<UMyBaseGameInstance>(GetGameInstance())) //why does he keep doing this
+	if(auto baseGameInstance = Cast<UMyBaseGameInstance>(GetGameInstance())) 
 		{
 			if(!baseGameInstance->isDeviceForMultiplePlayers)
 			{
