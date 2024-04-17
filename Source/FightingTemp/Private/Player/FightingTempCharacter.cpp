@@ -91,6 +91,7 @@ void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever poss
 //HELP
 	if(otherPlayer) //if exists....
 	{
+
 		if(auto characterMovement = GetCharacterMovement()) //then get our char movement
 		{
 			//WHY
@@ -101,9 +102,12 @@ void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever poss
 				{
 					if(isFlipped) //unflip
 					{
+						//UE_LOG(LogTemp, Warning, TEXT("IsFlipped True!!!!!!!! CHar: %s"), *this->GetName());
+
 						//sobbing 
-						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+						if(auto mesh = GetMesh()) //get tha meshh yass get it
 						{
+							UE_LOG(LogTemp, Warning, TEXT("GotCapsuleComponenet!!"));
 							transform = mesh->GetRelativeTransform();
 							scale = transform.GetScale3D();
 							scale.Y = -1;
@@ -117,8 +121,9 @@ void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever poss
 				{
 					if(!isFlipped) //flip
 					{
+						//UE_LOG(LogTemp, Warning, TEXT("IsFlipped False!!!!!!!! CHar: %s"), *this->GetName());
 						//sobbing 
-						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+						if(auto mesh = GetMesh()) //get tha meshh yass get it
 						{
 							transform = mesh->GetRelativeTransform();
 							scale = transform.GetScale3D();
