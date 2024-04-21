@@ -89,14 +89,16 @@ void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever poss
 {
 	Super::Tick(DeltaSeconds);
 //HELP
-	if(otherPlayer) //if exists....
+	if(!otherPlayer) //if exists....
 	{
+		return;
+	}
 		if(auto characterMovement = GetCharacterMovement()) //then get our char movement
 		{
-			//WHY
+			
 			if(auto enemyMovement = otherPlayer->GetCharacterMovement()) //get other player's movement
 			{
-				//IT JUST KEEPS GOING
+				
 				if(enemyMovement->GetActorLocation().X <= characterMovement->GetActorLocation().X) //left and right <--> = X in unreal. on map check if enemy to left of u
 				{
 					if(isFlipped) //unflip
@@ -134,7 +136,7 @@ void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever poss
 			}
 		}
 	}
-}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Actions
