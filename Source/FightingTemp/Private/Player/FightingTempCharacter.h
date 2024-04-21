@@ -82,6 +82,10 @@ protected:
 
 	// ------------------------------- //
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Hitbox")
+	AActor* hurtbox;
+	
+	UFUNCTION(BlueprintCallable)
 	void TakeDamage(float dmgAmt);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")

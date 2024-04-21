@@ -71,6 +71,8 @@ AFightingTempCharacter::AFightingTempCharacter()
 	scale = FVector(0.0f, 0.0f, 0.0f);
 	PlayerHealth = 1.0f;
 	isFlipped = false;
+
+	hurtbox = nullptr;
 }
 
 void AFightingTempCharacter::PawnClientRestart()
@@ -88,54 +90,53 @@ void AFightingTempCharacter::BeginPlay()
 void AFightingTempCharacter::Tick(float DeltaSeconds) //the worst code ever possible is below, fix later PLEASE WTF
 {
 	Super::Tick(DeltaSeconds);
-//HELP
 	if(!otherPlayer) //if exists....
 	{
 		return;
 	}
-		if(auto characterMovement = GetCharacterMovement()) //then get our char movement
+	if(auto characterMovement = GetCharacterMovement()) //then get our char movement
 		{
 			
-			if(auto enemyMovement = otherPlayer->GetCharacterMovement()) //get other player's movement
+		if(auto enemyMovement = otherPlayer->GetCharacterMovement()) //get other player's movement
 			{
 				
-				if(enemyMovement->GetActorLocation().X <= characterMovement->GetActorLocation().X) //left and right <--> = X in unreal. on map check if enemy to left of u
+			if(enemyMovement->GetActorLocation().X <= characterMovement->GetActorLocation().X) //left and right <--> = X in unreal. on map check if enemy to left of u
 				{
-					if(isFlipped) //unflip
+				if(isFlipped) //unflip
 					{
-						//sobbing 
-						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+						
+					if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
 						{
-							transform = mesh->GetRelativeTransform();
-							scale = transform.GetScale3D();
-							scale.Y = -1;
-							transform.SetScale3D(scale);
-							mesh->SetRelativeTransform(transform);
+						transform = mesh->GetRelativeTransform();
+						scale = transform.GetScale3D();
+						scale.Y = -1;
+						transform.SetScale3D(scale);
+						mesh->SetRelativeTransform(transform);
 						}
-						isFlipped = false;
+					isFlipped = false;
 					}
 				}
-				else
-				{
-					if(!isFlipped) //flip
+			else
+			{
+				if(!isFlipped) //flip
 					{
-						//sobbing 
-						if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
+					//sobbing 
+					if(auto mesh = GetCapsuleComponent()->GetChildComponent(1)) //get tha meshh yass get it
 						{
-							transform = mesh->GetRelativeTransform();
-							scale = transform.GetScale3D();
-							scale.Y = 1;
-							transform.SetScale3D(scale);
-							mesh->SetRelativeTransform(transform);
+						transform = mesh->GetRelativeTransform();
+						scale = transform.GetScale3D();
+						scale.Y = 1;
+						transform.SetScale3D(scale);
+						mesh->SetRelativeTransform(transform);
 						}
-						isFlipped = true;
+					isFlipped = true;
 					}
 					
-				}
+			}
 				
 			}
-		}
-	}
+		}	
+}
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -148,7 +149,7 @@ void AFightingTempCharacter::TakeDamage(float dmgAmt)
 	{
 		PlayerHealth = 0.0f;
 	}
-	//TEMP!!!!
+	
 }
 
 void AFightingTempCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
